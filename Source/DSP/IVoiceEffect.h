@@ -22,5 +22,17 @@ public:
     virtual void process(juce::AudioBuffer<float>& buffer) noexcept = 0;
     virtual void reset() noexcept = 0;
     virtual const char* name() const noexcept = 0;
+
+    /**
+        Applies the "Timbre" slider value (see TimbreRange in AppState.h) to
+        this effect's internal state. Called from the audio thread, once per
+        block, with the value currently stored in AppState::effectTimbre for
+        this effect; implementations must clamp to their own range and skip
+        the actual mutation when the value hasn't changed since the last call
+        (RNF01: real mutation of DSP internals happens on the audio thread,
+        never directly from the UI thread). Effects with no adjustable timbre
+        (e.g. passthrough) simply don't override this no-op default.
+    */
+    virtual void setTimbre(float /*value*/) noexcept {}
 };
 } // namespace eq

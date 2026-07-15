@@ -7,28 +7,27 @@
 namespace eq
 {
 /**
-    Monster voice: a deep, pitched-down voice. Implemented by reusing
-    PitchShifter with a base negative semitone offset, so all the SoundTouch
-    handling lives in one place.
+    Chipmunk voice: a high, squeaky voice. Same pattern as MonsterEffect
+    (PitchShifter with a base offset that setTimbre() nudges with a delta),
+    just with a large positive base offset instead of a negative one.
 
     setTimbre() adds a semitone delta on top of kBaseSemitones (clamped to
-    timbreRangeFor(VoiceEffectType::Monster)); safe to call from the audio
+    timbreRangeFor(VoiceEffectType::Chipmunk)); safe to call from the audio
     thread and a no-op when the value hasn't changed.
 */
-class MonsterEffect : public IVoiceEffect
+class ChipmunkEffect : public IVoiceEffect
 {
 public:
-    MonsterEffect();
+    ChipmunkEffect();
 
     void prepare(double sampleRate, int maxBlockSize, int numChannels) override;
     void process(juce::AudioBuffer<float>& buffer) noexcept override;
     void reset() noexcept override;
     void setTimbre(float semitoneDelta) noexcept override;
-    const char* name() const noexcept override { return "Monster"; }
+    const char* name() const noexcept override { return "Chipmunk"; }
 
 private:
-    // Roughly a perfect fifth down for a deep, monstrous voice.
-    static constexpr float kBaseSemitones = -7.0f;
+    static constexpr float kBaseSemitones = 9.0f;
 
     PitchShifter pitch;
     float lastDelta { 0.0f };

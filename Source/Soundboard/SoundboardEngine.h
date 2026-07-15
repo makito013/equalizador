@@ -19,7 +19,7 @@ namespace eq
 class SoundboardEngine
 {
 public:
-    static constexpr int numSlots = 8;
+    static constexpr int numSlots = 12;
 
     SoundboardEngine();
 
@@ -37,6 +37,9 @@ public:
 
     const juce::String& getSlotName(int index) const noexcept;
     bool isSlotLoaded(int index) const noexcept;
+
+    /** Exposes the supported-format wildcard for the UI's FileChooser filter. */
+    const juce::AudioFormatManager& getFormatManager() const noexcept { return formatManager; }
 
 private:
     std::array<SoundSlot, numSlots> slots;

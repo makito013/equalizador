@@ -52,11 +52,17 @@ bool SoundboardEngine::loadSlot(int index, const juce::File& file)
     }
 
     auto& slot = slots[static_cast<size_t>(index)];
-    slot.playing = false;
-    slot.playbackPosition = 0;
-    slot.triggerRequested.store(false);
-    slot.sample = std::move(resampled);
+
+    // Publish the newly decoded buffer via a fresh, independent allocation
+    // (never mutate a buffer that might already be published). See
+    // SoundSlot.h for the full thread-safety contract: the audio thread
+    // keeps whatever buffer it's currently reading alive via its own
+    // shared_ptr copy, so this is safe even if renderNextBlock() is
+    // mid-block on the buffer being replaced, and even under back-to-back
+    // loadSlot() calls on the same slot. Do NOT touch
+    // slot.playing/slot.playbackPosition here - those are audio-thread-owned.
     slot.name = file.getFileNameWithoutExtension();
+    slot.publishSample(std::make_shared<const juce::AudioBuffer<float>>(std::move(resampled)));
     return true;
 }
 
@@ -79,21 +85,38 @@ void SoundboardEngine::renderNextBlock(juce::AudioBuffer<float>& output, int num
             slot.playbackPosition = 0;
         }
 
-        if (! slot.playing || ! slot.hasSample())
+        // Take a local strong reference to the currently published buffer
+        // once per slot per block. This is the crux of the RF10 fix: even if
+        // loadSlot() publishes one or more new buffers on this slot while
+        // this block is being rendered, `sample` keeps whatever buffer was
+        // active at the top of this iteration alive for the rest of it - it
+        // can never be freed out from under this loop (see SoundSlot.h).
+        const auto sample = slot.loadActiveSample();
+
+        if (! slot.playing || sample == nullptr || sample->getNumSamples() == 0)
             continue;
 
-        const int sampleChannels = slot.sample.getNumChannels();
-        const int remaining = slot.sample.getNumSamples() - slot.playbackPosition;
+        const int sampleChannels = sample->getNumChannels();
+        const int remaining = sample->getNumSamples() - slot.playbackPosition;
+        if (remaining <= 0)
+        {
+            // A concurrent loadSlot() swapped in a shorter sample than the
+            // position we were mid-playback at; stop cleanly instead of
+            // passing a negative length to addFrom().
+            slot.playing = false;
+            continue;
+        }
+
         const int toRender = juce::jmin(numSamples, remaining);
 
         for (int ch = 0; ch < outChannels; ++ch)
         {
             const int srcCh = juce::jmin(ch, sampleChannels - 1);
-            output.addFrom(ch, 0, slot.sample, srcCh, slot.playbackPosition, toRender);
+            output.addFrom(ch, 0, *sample, srcCh, slot.playbackPosition, toRender);
         }
 
         slot.playbackPosition += toRender;
-        if (slot.playbackPosition >= slot.sample.getNumSamples())
+        if (slot.playbackPosition >= sample->getNumSamples())
             slot.playing = false;
     }
 }

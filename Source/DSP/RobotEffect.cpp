@@ -6,8 +6,27 @@ namespace eq
 {
 void RobotEffect::prepare(double sampleRate, int, int)
 {
-    phaseIncrement = 2.0 * juce::MathConstants<double>::pi * carrierHz / sampleRate;
+    sampleRateHz = sampleRate;
+    recomputePhaseIncrement();
     phase = 0.0;
+}
+
+void RobotEffect::recomputePhaseIncrement() noexcept
+{
+    phaseIncrement = 2.0 * juce::MathConstants<double>::pi * carrierHz / sampleRateHz;
+}
+
+void RobotEffect::setTimbre(float carrierHzTarget) noexcept
+{
+    const auto range = timbreRangeFor(VoiceEffectType::Robot);
+    const double clamped = juce::jlimit(static_cast<double>(range.min),
+                                        static_cast<double>(range.max),
+                                        static_cast<double>(carrierHzTarget));
+    if (juce::approximatelyEqual(clamped, carrierHz))
+        return; // no change: skip recomputing the phase increment
+
+    carrierHz = clamped;
+    recomputePhaseIncrement();
 }
 
 void RobotEffect::process(juce::AudioBuffer<float>& buffer) noexcept

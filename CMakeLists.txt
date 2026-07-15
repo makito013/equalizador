@@ -45,6 +45,9 @@ set(EQ_CORE_SOURCES
     "${EQ_SOURCE_DIR}/DSP/PitchShifter.cpp"
     "${EQ_SOURCE_DIR}/DSP/RobotEffect.cpp"
     "${EQ_SOURCE_DIR}/DSP/MonsterEffect.cpp"
+    "${EQ_SOURCE_DIR}/DSP/AlienEffect.cpp"
+    "${EQ_SOURCE_DIR}/DSP/ChipmunkEffect.cpp"
+    "${EQ_SOURCE_DIR}/DSP/DemonEffect.cpp"
     "${EQ_SOURCE_DIR}/DSP/EffectChain.cpp"
     "${EQ_SOURCE_DIR}/Mixer/SoftLimiter.cpp"
     "${EQ_SOURCE_DIR}/Mixer/AudioMixer.cpp"
@@ -58,6 +61,8 @@ set(EQ_CORE_SOURCES
 set(EQ_UI_SOURCES
     "${EQ_SOURCE_DIR}/UI/BypassIndicator.cpp"
     "${EQ_SOURCE_DIR}/UI/EffectSegmentedControl.cpp"
+    "${EQ_SOURCE_DIR}/UI/HotkeyCaptureButton.cpp"
+    "${EQ_SOURCE_DIR}/UI/SoundboardSlotView.cpp"
     "${EQ_SOURCE_DIR}/MainComponent.cpp"
     "${EQ_SOURCE_DIR}/Main.cpp")
 
@@ -101,15 +106,28 @@ juce_add_console_app(EqualizadorTests
     NEEDS_CURL FALSE)
 
 target_sources(EqualizadorTests PRIVATE
+    "${EQ_SOURCE_DIR}/DSP/PitchShifter.cpp"
+    "${EQ_SOURCE_DIR}/DSP/RobotEffect.cpp"
+    "${EQ_SOURCE_DIR}/DSP/MonsterEffect.cpp"
+    "${EQ_SOURCE_DIR}/DSP/AlienEffect.cpp"
+    "${EQ_SOURCE_DIR}/DSP/ChipmunkEffect.cpp"
+    "${EQ_SOURCE_DIR}/DSP/DemonEffect.cpp"
+    "${EQ_SOURCE_DIR}/DSP/EffectChain.cpp"
     "${EQ_SOURCE_DIR}/Mixer/SoftLimiter.cpp"
     "${EQ_SOURCE_DIR}/Mixer/AudioMixer.cpp"
+    "${EQ_SOURCE_DIR}/Soundboard/SoundboardEngine.cpp"
     "${EQ_SOURCE_DIR}/Persistence/ConfigManager.cpp"
+    "${EQ_SOURCE_DIR}/Installer/VBCableDetector.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/TestMain.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/HotkeyEventQueueTests.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/AppStateTests.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/SoftLimiterTests.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/AudioMixerTests.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/tests/ConfigManagerTests.cpp")
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/ConfigManagerTests.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/EffectChainTests.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/SoundboardEngineTests.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/VBCableDetectorTests.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/ModifierTranslationTests.cpp")
 
 target_include_directories(EqualizadorTests PRIVATE "${EQ_SOURCE_DIR}")
 
@@ -119,9 +137,12 @@ target_compile_definitions(EqualizadorTests PRIVATE
     JUCE_STANDALONE_APPLICATION=1)
 
 target_link_libraries(EqualizadorTests PRIVATE
+    SoundTouch
     juce::juce_core
     juce::juce_data_structures
     juce::juce_audio_basics
+    juce::juce_audio_formats
+    juce::juce_audio_devices
     juce::juce_recommended_config_flags
     juce::juce_recommended_warning_flags)
 

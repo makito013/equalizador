@@ -1,30 +1,30 @@
-#include "MonsterEffect.h"
+#include "ChipmunkEffect.h"
 
 namespace eq
 {
-MonsterEffect::MonsterEffect()
+ChipmunkEffect::ChipmunkEffect()
 {
     pitch.setSemitones(kBaseSemitones);
 }
 
-void MonsterEffect::prepare(double sampleRate, int maxBlockSize, int numChannels)
+void ChipmunkEffect::prepare(double sampleRate, int maxBlockSize, int numChannels)
 {
     pitch.prepare(sampleRate, maxBlockSize, numChannels);
 }
 
-void MonsterEffect::process(juce::AudioBuffer<float>& buffer) noexcept
+void ChipmunkEffect::process(juce::AudioBuffer<float>& buffer) noexcept
 {
     pitch.process(buffer);
 }
 
-void MonsterEffect::reset() noexcept
+void ChipmunkEffect::reset() noexcept
 {
     pitch.reset();
 }
 
-void MonsterEffect::setTimbre(float semitoneDelta) noexcept
+void ChipmunkEffect::setTimbre(float semitoneDelta) noexcept
 {
-    const auto range = timbreRangeFor(VoiceEffectType::Monster);
+    const auto range = timbreRangeFor(VoiceEffectType::Chipmunk);
     const float clamped = juce::jlimit(range.min, range.max, semitoneDelta);
     if (juce::approximatelyEqual(clamped, lastDelta))
         return;

@@ -30,7 +30,21 @@ public:
     using Callback = std::function<void(int /*id*/)>;
 
     virtual void setCallback(Callback cb) = 0;
+
+    /**
+        Registers a hotkey. If `binding.id` was already registered, it is
+        transparently unregistered first (Windows requires the old
+        registration to be dropped before an id can be reused with a
+        different key). Callers are responsible for resolving *cross-id*
+        conflicts (two different ids wanting the same key) by calling
+        unregisterHotkey() on the id that currently owns that key before
+        calling this - see MainComponent::registerExclusiveHotkey.
+    */
     virtual bool registerHotkey(const HotkeyBinding& binding) = 0;
+
+    /** Unregisters a single id, if currently registered. Idempotent. */
+    virtual bool unregisterHotkey(int id) = 0;
+
     virtual void unregisterAll() = 0;
 
     /** False on platforms where global hotkeys are not implemented. */
@@ -46,6 +60,7 @@ class NoopHotkeyBackend : public IHotkeyBackend
 public:
     void setCallback(Callback cb) override { callback = std::move(cb); }
     bool registerHotkey(const HotkeyBinding&) override { return false; }
+    bool unregisterHotkey(int) override { return false; }
     void unregisterAll() override {}
     bool isSupported() const override { return false; }
 

@@ -27,6 +27,7 @@ public:
 
     void setCallback(Callback cb) override;
     bool registerHotkey(const HotkeyBinding& binding) override;
+    bool unregisterHotkey(int id) override;
     void unregisterAll() override;
     bool isSupported() const override { return true; }
 
@@ -37,7 +38,12 @@ private:
     std::thread messageThread;
     std::atomic<bool> running { false };
     unsigned long threadId { 0 }; // DWORD, kept as unsigned long to avoid <windows.h> in header
-    std::vector<HotkeyBinding> pending;
+
+    // Bindings currently registered with RegisterHotKey. Touched only by the
+    // hotkey message-thread (threadMain), never by registerHotkey()/
+    // unregisterHotkey() directly - those only post messages carrying the
+    // binding, so no lock is needed here.
+    std::vector<HotkeyBinding> active;
 };
 #endif // _WIN32
 
